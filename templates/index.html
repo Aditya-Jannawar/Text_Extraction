@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Text Extraction and Export</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Text Extraction and Export Tool</h1>
+
+        <!-- Upload Form -->
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".pdf, .png, .jpg, .jpeg" required>
+            <button type="submit">Upload and Extract Text</button>
+        </form>
+
+        <!-- Textarea for extracted text -->
+        <textarea id="extractedText" placeholder="Extracted text will appear here..."></textarea>
+
+        <!-- Error Container -->
+        <div id="errorContainer" style="display: none; color: red; margin-top: 20px;">
+            <h3>Extraction Errors</h3>
+            <textarea id="errorText" rows="5" cols="50" readonly></textarea>
+        </div>
+        
+        <!-- Export Buttons -->
+        <div class="export-buttons">
+            <button onclick="exportText('pdf')">Export to PDF</button>
+            <button onclick="exportText('word')">Export to Word</button>
+        </div>
+
+        <!-- Footer Note -->
+
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('extractedText').value = data.text;
+                // Handle and display errors if they exist
+                if (data.errors && data.errors.length > 0) {
+                    document.getElementById('errorContainer').style.display = 'block';
+                    document.getElementById('errorText').value = data.errors.join('\n');
+                } else {
+                document.getElementById('errorContainer').style.display = 'none';
+            }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        function exportText(type) {
+            const text = document.getElementById('extractedText').value;
+            fetch('/export', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: text, type: type })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const downloadLink = document.createElement('a');
+                downloadLink.href = `/download/${data.path.split('/').pop()}`;
+                downloadLink.download = data.path.split('/').pop();
+                downloadLink.click();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
