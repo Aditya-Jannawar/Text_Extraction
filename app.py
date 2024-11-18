@@ -97,7 +97,7 @@ def upload_file():
 @app.route('/test-tesseract', methods=['GET'])
 def test_tesseract():
     try:
-        output = pytesseract.image_to_string('test_image.png')  # Provide a valid path
+        output = pytesseract.image_to_string('uploads/google_img.png')  # Provide a valid path
         return jsonify({"message": "Tesseract working", "output": output})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
