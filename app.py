@@ -55,38 +55,43 @@ def index():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     """Handle file upload, convert PDF to images if needed, and extract text."""
-    file = request.files['file']
-    filename = secure_filename(file.filename)
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(file_path)
+    try:
+        file = request.files['file']
+        if not file:
+            return jsonify({"error": "No file uploaded"}), 400
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
 
-    # If PDF, convert to images
-    if filename.lower().endswith('.pdf'):
-        images = convert_pdf_to_images(file_path)
-    else:
-        images = [file_path]
+        # If PDF, convert to images
+        if filename.lower().endswith('.pdf'):
+            images = convert_pdf_to_images(file_path)
+        else:
+            images = [file_path]
 
     # Extract text from each image and capture status
-    extracted_text = ""
-    extraction_errors = []  # Collect errors in a separate list
+        extracted_text = ""
+        extraction_errors = []  # Collect errors in a separate list
 
 
-    for i, image in enumerate(images):
-        text, errors = extract_text_from_image(image)
-        if "errors" in text:
-            extraction_errors.append(f"Page {i + 1}: {errors}")  # Add error detail
-        else:
-            extracted_text += f"--- Page {i + 1} ---\n{text}\n"
+        for i, image in enumerate(images):
+            text, errors = extract_text_from_image(image)
+            if "errors" in text:
+                extraction_errors.append(f"Page {i + 1}: {errors}")  # Add error detail
+            else:
+                extracted_text += f"--- Page {i + 1} ---\n{text}\n"
 
         # Clean up image files after extraction
-        if image != file_path:
-            os.remove(image)
+            if image != file_path:
+                os.remove(image)
 
     # Clean up extra line spacing in extracted text
-    cleaned_text =re.sub(r'\n+', ' ', extracted_text.strip()) # Remove extra line breaks
+        cleaned_text =re.sub(r'\n+', ' ', extracted_text.strip()) # Remove extra line breaks
 
     # Include cleaned text and error list in response
-    return jsonify({"text": cleaned_text, "errors": extraction_errors})
+        return jsonify({"text": cleaned_text, "errors": extraction_errors})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 
