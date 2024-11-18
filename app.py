@@ -36,7 +36,8 @@ def extract_text_from_image(image_path):
    errors = []
 
     # Check for common OCR issues in extracted text
-   if '' in text or '•' or '*' or '+' in text:
+   if '' in text or '•' in text or '*' in text or '+' in text:
+
         errors.append("Unrecognized symbols (e.g., bullets) found, which OCR could not interpret correctly.")
 
    if not text.strip():
@@ -76,13 +77,13 @@ def upload_file():
 
         for i, image in enumerate(images):
             text, errors = extract_text_from_image(image)
-            if "errors" in text:
+            if "errors":
                 extraction_errors.append(f"Page {i + 1}: {errors}")  # Add error detail
             else:
                 extracted_text += f"--- Page {i + 1} ---\n{text}\n"
 
         # Clean up image files after extraction
-            if image != file_path:
+            if image != file_path and os.path.exists(image):
                 os.remove(image)
 
     # Clean up extra line spacing in extracted text
@@ -90,6 +91,14 @@ def upload_file():
 
     # Include cleaned text and error list in response
         return jsonify({"text": cleaned_text, "errors": extraction_errors})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/test-tesseract', methods=['GET'])
+def test_tesseract():
+    try:
+        output = pytesseract.image_to_string('test_image.png')  # Provide a valid path
+        return jsonify({"message": "Tesseract working", "output": output})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
