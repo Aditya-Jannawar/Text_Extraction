@@ -3,3 +3,6 @@ pytesseract
 PyMuPDF
 fpdf
 python-docx
+gunicorn
+Jinja2>=3.1.2
+Werkzeug>=3.0.0
