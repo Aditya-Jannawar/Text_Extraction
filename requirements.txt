@@ -6,3 +6,4 @@ python-docx
 gunicorn
 Jinja2
 Werkzeug
+Frozen-Flask
